@@ -147,13 +147,18 @@ def generate_pdf(data: dict[str, Any]) -> bytes:
     
     # 4. Main Message (Naturally Flush Left)
     program_account_info = f", bearing account no. {data.get('program_account_number', '')}" if data.get('program_account_number') else ""
-    cheque_info = f" and cheque no. {data['cheque_number']}" if data.get('cheque_number') else ""
-    
-    main_message = (
+
+    base_message = (
         f"With due respect, please credit electronically to the accounts below with the amount "
         f"Rs. {total_amount:,.2f} /- ({amount_words}) from {data.get('program_account_name', 'Program Account')}"
-        f"{program_account_info}{cheque_info}."
+        f"{program_account_info}"
     )
+
+    if data.get('cheque_number'):
+        main_message = base_message + f" and cheque no. {data['cheque_number']}."
+    else:
+        main_message = base_message + "."
+
     story.append(Paragraph(main_message, body_style))
     story.append(Spacer(1, 10))
     
@@ -261,7 +266,7 @@ with st.form("transfer_letter_form"):
     sender_designation = st.text_input("From (Designation)", value="M.O I/C")
     sender_address = st.text_area("Your address", value="PHC Darpanarayanpur, Dist.- Nayagarh")
     sender_phone = st.text_input("Your phone (optional)", placeholder="+91-98765-43210")
-    cheque_number = st.text_input("Cheque number", placeholder="000123")
+    cheque_number = st.text_input("Cheque number (optional)", placeholder="000123")
     letter_date = st.date_input("Letter date", value=date.today())
     program_account_name = st.text_input("Program Account name", value="HWC PHC Darpanarayanpur")
     program_account_number = st.text_input("Program Account number", placeholder="1234567890")
@@ -320,7 +325,7 @@ if submitted:
     }
 
     missing_fields = []
-    for key in ["bank_name", "branch_name", "sender_name", "sender_designation", "cheque_number"]:
+    for key in ["bank_name", "branch_name", "sender_name", "sender_designation"]:
         if not values[key].strip():
             missing_fields.append(key.replace("_", " "))
 
